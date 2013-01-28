@@ -25,6 +25,7 @@ public enum StatusCode
 {
     OK(200, "OK"), 
     FOUND(302, "Found"), 
+    UNAUTHORIZED(401, "Unauthorized"), 
     ACCESS_DENIED(403, "Access Denied"), 
     NOT_FOUND(404, "Not Found"), 
     INTERNAL_SERVER_ERROR(500, "Internal Server Error");
