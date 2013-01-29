@@ -17,7 +17,14 @@
 
 package de.mewin.jhttp.mod;
 
+import java.io.File;
+import java.io.FilenameFilter;
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.jar.JarFile;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.zip.ZipEntry;
 
 /**
  *
@@ -56,5 +63,54 @@ public class ModuleManager
             }
         }
         list.add(module);
+    }
+    
+    public void loadModules(File folder)
+    {
+        if (folder == null || folder.exists() || !folder.isDirectory())
+        {
+            throw new IllegalArgumentException("Parameter must be a folder.");
+        }
+        
+        File[] jars = folder.listFiles(new FilenameFilter()
+        {
+            @Override
+            public boolean accept(File file, String name)
+            {
+                return name.toLowerCase().endsWith(".jar");
+            }
+        });
+        
+        for (File jar : jars)
+        {
+            loadModule(jar);
+        }
+    }
+    
+    public void loadModule(File jar)
+    {
+        if (jar == null || !jar.exists() || !jar.isFile())
+        {
+            try
+            {
+                JarFile jarFile = new JarFile(jar);
+                ZipEntry infoFile = jarFile.getEntry("module.conf");
+                
+                if (infoFile != null && !infoFile.isDirectory())
+                {
+                    InputStream in = jarFile.getInputStream(infoFile);
+                }
+            }
+            catch(Exception ex)
+            {
+                getLogger().log(Level.WARNING, "Could not open jar file: ", ex);
+                return;
+            }
+        }
+    }
+    
+    private Logger getLogger()
+    {
+        return Logger.getLogger("HttpServer");
     }
 }
