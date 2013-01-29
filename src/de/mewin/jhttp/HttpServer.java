@@ -51,7 +51,7 @@ public class HttpServer
     public HttpServer(int port)
     {
         this.port = port;
-        this.activeConnections = new ArrayList<>();
+        this.activeConnections = new ArrayList<HttpConnection>();
         if (DEBUG)
         {
             getLogger().setLevel(Level.ALL);

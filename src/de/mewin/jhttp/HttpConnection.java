@@ -146,27 +146,37 @@ public class HttpConnection
             
             server.handleQuery(this, header, body);
         }
-        catch(IOException | NumberFormatException | ProtocolException ex)
+        catch(ProtocolException ex)
         {
-            try
-            {
-                socket.close();
-            }
-            catch(Exception e)
-            {
-                handleThrowable(e);
-            }
+            close();
             // TODO: handle protocol errors
         }
-        catch(Exception ex)
+        catch(NumberFormatException ex2)
         {
-            handleThrowable(ex);
+            close();
+            // TODO: handle protocol errors
+        }
+        catch(IOException ex3)
+        {
+            close();
+            // TODO: handle protocol errors
+        }
+        catch(Exception ex4)
+        {
+            handleThrowable(ex4);
         }
     }
     
     public void close()
     {
-        
+        try
+        {
+            socket.close();
+        }
+        catch(Exception ex)
+        {
+            handleThrowable(ex);
+        }
     }
     
     private void handleThrowable(Throwable t)

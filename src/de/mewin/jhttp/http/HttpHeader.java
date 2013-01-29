@@ -47,7 +47,7 @@ public class HttpHeader
         this.method = null;
         this.received = false;
         this.httpVersion = HTTP_VERSION;
-        this.headers = new HashMap<>();
+        this.headers = new HashMap<String, String>();
         this.status = status;
     }
     
@@ -60,7 +60,7 @@ public class HttpHeader
     public HttpHeader(RequestMethod method, String url)
     {
         this.method = method;
-        this.headers = new HashMap<>();
+        this.headers = new HashMap<String, String>();
         this.httpVersion = HTTP_VERSION;
         this.url = url;
         this.received = true;
@@ -78,7 +78,7 @@ public class HttpHeader
     public HttpHeader(InputStream in) throws IOException, ProtocolException
     {
         this.received = true;
-        this.headers = new HashMap<>();
+        this.headers = new HashMap<String, String>();
         this.status = null;
         int r;
         String tmp = "";
@@ -244,7 +244,7 @@ public class HttpHeader
      */
     public HashMap<String, String> getHeaderValues()
     {
-        return new HashMap<>(this.headers);
+        return new HashMap<String, String>(this.headers);
     }
     
     /**

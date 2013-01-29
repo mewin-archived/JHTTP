@@ -35,7 +35,7 @@ public class ServerSettingsFile
     public ServerSettingsFile(File file)
     {
         this.file = file;
-        this.settings = new HashMap<>();
+        this.settings = new HashMap<String, Object>();
     }
     
     public void load() throws IOException

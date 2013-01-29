@@ -32,7 +32,7 @@ public class EventManager
     
     public EventManager()
     {
-        registeredEvents = new HashMap<>();
+        registeredEvents = new HashMap<Class<? extends Event>, ArrayList<Handler>>();
     }
     
     public void registerEvents(Listener listener)
@@ -69,7 +69,7 @@ public class EventManager
             }
             else
             {
-                list = new ArrayList<>();
+                list = new ArrayList<Handler>();
                 registeredEvents.put(para[0], list);
             }
             
@@ -102,7 +102,7 @@ public class EventManager
                 {
                     handler.getMethod().invoke(handler.getListener(), e);
                 }
-                catch(IllegalAccessException | IllegalArgumentException | InvocationTargetException ex)
+                catch(Exception ex)
                 {
                     throw new RuntimeException("Could not call event method.", ex);
                 }
