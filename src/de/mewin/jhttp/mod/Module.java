@@ -18,7 +18,6 @@
 package de.mewin.jhttp.mod;
 
 import de.mewin.jhttp.HttpServer;
-import de.mewin.jhttp.event.RequestDocumentEvent;
 
 /**
  *
