@@ -26,15 +26,37 @@ import de.mewin.jhttp.HttpServer;
 public abstract class Module
 {
     private HttpServer server = null;
+    private boolean enabled = false;
     
-    public void onEnable()
+    protected void onEnable()
     {
         
     }
     
-    public void onDisable()
+    protected void onDisable()
     {
         
+    }
+    
+    public final void setEnabled(boolean enabled)
+    {
+        if (enabled != this.enabled)
+        {
+            this.enabled = enabled;
+            if (enabled)
+            {
+                this.onEnable();
+            }
+            else
+            {
+                this.onDisable();
+            }
+        }
+    }
+    
+    public final boolean isEnabled()
+    {
+        return this.enabled;
     }
     
     public final void setServer(HttpServer server)
@@ -47,6 +69,17 @@ public abstract class Module
         {
             throw new IllegalArgumentException("Server has allready been set.");
         }
+    }
+    
+    /**
+     * the priority for the module to be enabled
+     * a module is enable before any other module that has a lower priority
+     * the default priority is 0
+     * @return the priority of this module
+     */
+    public int priority()
+    {
+        return 0;
     }
     
     protected HttpServer getServer()
