@@ -17,7 +17,6 @@
 
 package de.mewin.jhttp.event;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -39,14 +38,11 @@ public class EventManager
     {
         for (Method m : listener.getClass().getDeclaredMethods())
         {
-            if (m.isAccessible())
+            EventHandler eh = m.getAnnotation(EventHandler.class);
+
+            if (eh != null)
             {
-                EventHandler eh = m.getAnnotation(EventHandler.class);
-                
-                if (eh != null)
-                {
-                    registerHandler(m, eh.priority(), listener);
-                }
+                registerHandler(m, eh.priority(), listener);
             }
         }
     }
