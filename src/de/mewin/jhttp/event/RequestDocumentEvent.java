@@ -17,11 +17,69 @@
 
 package de.mewin.jhttp.event;
 
+import de.mewin.jhttp.http.HttpHeader;
+import java.io.File;
+import java.io.InputStream;
+
 /**
  *
  * @author mewin<mewin001@hotmail.de>
  */
 public class RequestDocumentEvent extends Event
 {
-
+    private String requestURL;
+    private File requestFile;
+    private HTTPAnswer newAnswer = null;
+    private HttpHeader requestHeader;
+    private String requestBody;
+    
+    public RequestDocumentEvent(String url, File file, HttpHeader header, String body)
+    {
+        this.requestURL = url;
+        this.requestFile = file;
+        this.requestHeader = header;
+        this.requestBody = body;
+    }
+    
+    public String getURL()
+    {
+        return this.requestURL;
+    }
+    
+    public File getFile()
+    {
+        return this.requestFile;
+    }
+    
+    public void setFile(File file)
+    {
+        this.requestFile = file;
+    }
+    
+    public void setNewAnswer(HTTPAnswer newAnswer)
+    {
+        this.newAnswer = newAnswer;
+    }
+    
+    public HTTPAnswer getNewAnswer()
+    {
+        return this.newAnswer;
+    }
+    
+    public HttpHeader getRequestHeader()
+    {
+        return this.requestHeader;
+    }
+    
+    public String getRequestBody()
+    {
+        return this.requestBody;
+    }
+    
+    public static class HTTPAnswer
+    {
+        public HttpHeader header;
+        public String content;
+        public InputStream in = null;
+    }
 }
