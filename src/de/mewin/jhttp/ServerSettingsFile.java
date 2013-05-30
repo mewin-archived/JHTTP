@@ -30,7 +30,12 @@ import java.util.HashMap;
 public class ServerSettingsFile
 {
     private File file;
-    private HashMap<String, Object> settings;
+    protected HashMap<String, Object> settings;
+    
+    protected ServerSettingsFile()
+    {
+        this.settings = new HashMap<>();
+    }
     
     public ServerSettingsFile(File file)
     {
@@ -47,7 +52,7 @@ public class ServerSettingsFile
         }
     }
     
-    private void parseConfig(Reader in) throws IOException
+    protected void parseConfig(Reader in) throws IOException
     {
         String confName = "";
         String conf = null;
@@ -167,13 +172,14 @@ public class ServerSettingsFile
             }
             catch(NumberFormatException ex2)
             {
-                if (value.equals("true"))
+                switch (value)
                 {
-                    val = true;
-                }
-                else if(value.equals("false"))
-                {
-                    val = false;
+                    case "true":
+                        val = true;
+                        break;
+                    case "false":
+                        val = false;
+                        break;
                 }
             }
         }
@@ -186,6 +192,18 @@ public class ServerSettingsFile
         if (settings.containsKey(name))
         {
             return (T) settings.get(name);
+        }
+        else
+        {
+            return def;
+        }
+    }
+    
+    public String getString(String name, String def)
+    {
+        if (settings.containsKey(name))
+        {
+            return String.valueOf(settings.get(name));
         }
         else
         {
