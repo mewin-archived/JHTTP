@@ -17,9 +17,13 @@
 
 package de.mewin.jhttp.mod;
 
+import de.mewin.jhttp.HttpServer;
 import java.io.File;
 import java.io.FilenameFilter;
+import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.jar.JarFile;
 import java.util.logging.Level;
@@ -33,14 +37,17 @@ import java.util.zip.ZipEntry;
 public class ModuleManager
 {
     private ArrayList<Module> modules;
+    private HttpServer server;
     
-    public ModuleManager()
+    public ModuleManager(HttpServer server)
     {
         this.modules = new ArrayList<Module>();
+        this.server = server;
     }
     
     public void registerModule(Module module)
     {
+        module.setServer(server);
         insertModule(this.modules, module);
     }
     
@@ -67,7 +74,7 @@ public class ModuleManager
     
     public void loadModules(File folder)
     {
-        if (folder == null || folder.exists() || !folder.isDirectory())
+        if (folder == null || !folder.exists() || !folder.isDirectory())
         {
             throw new IllegalArgumentException("Parameter must be a folder.");
         }
@@ -89,7 +96,7 @@ public class ModuleManager
     
     public void loadModule(File jar)
     {
-        if (jar == null || !jar.exists() || !jar.isFile())
+        if (jar != null && jar.exists() && jar.isFile())
         {
             try
             {
@@ -99,6 +106,23 @@ public class ModuleManager
                 if (infoFile != null && !infoFile.isDirectory())
                 {
                     InputStream in = jarFile.getInputStream(infoFile);
+                    try
+                    {
+                        ModuleConfiguration conf = new ModuleConfiguration(in);
+                        Class cls = URLClassLoader.newInstance(new URL[] {jar.toURI().toURL()}).loadClass(conf.mainClass);
+                        if (!Module.class.isAssignableFrom(cls))
+                        {
+                            throw new Exception("Main class is not a module.");
+                        }
+                        else
+                        {
+                            registerModule((Module) cls.newInstance());
+                        }
+                    }
+                    catch(IOException | ModuleException ex)
+                    {
+                        throw new Exception("Failed to load module configuration:", ex);
+                    }
                 }
             }
             catch(Exception ex)

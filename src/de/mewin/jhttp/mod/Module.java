@@ -27,6 +27,20 @@ public abstract class Module
 {
     private HttpServer server = null;
     private boolean enabled = false;
+    private ModuleConfiguration config = null;
+    
+    public void setConfig(ModuleConfiguration conf)
+    {
+        if (this.config == null)
+        {
+            this.config = conf;
+        }
+    }
+    
+    public ModuleConfiguration getConfig()
+    {
+        return this.config;
+    }
     
     protected void onEnable()
     {
@@ -61,19 +75,19 @@ public abstract class Module
     
     public final void setServer(HttpServer server)
     {
-        if (server == null)
+        if (this.server == null)
         {
             this.server = server;
         }
         else
         {
-            throw new IllegalArgumentException("Server has allready been set.");
+            //throw new IllegalArgumentException("Server has allready been set.");
         }
     }
     
     /**
      * the priority for the module to be enabled
-     * a module is enable before any other module that has a lower priority
+     * a module is enabled before any other module that has a lower priority
      * the default priority is 0
      * @return the priority of this module
      */
