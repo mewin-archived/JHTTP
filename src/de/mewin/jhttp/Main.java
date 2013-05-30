@@ -17,6 +17,8 @@
 
 package de.mewin.jhttp;
 
+import java.util.HashMap;
+
 /**
  *
  * @author mewin<mewin001@hotmail.de>
@@ -25,8 +27,48 @@ public class Main
 {
     public static void main(String[] args)
     {
+        int port = 80;
+        HashMap<String, String> options = options(args);
+        if (options.containsKey("port"))
+        {
+            try
+            {
+                port = Integer.valueOf(options.get("port"));
+            }
+            catch(NumberFormatException ex)
+            {
+                System.err.println("Invalid port: " + options.get("port"));
+                System.exit(1);
+            }
+            if (port < 1 || port > 65535)
+            {
+                System.err.println("Port must be between 1 and 65535");
+                System.exit(2);
+            }
+        }
         HttpServer server = new HttpServer(80);
         
         server.start();
+    }
+    
+    private static HashMap<String, String> options(String[] args)
+    {
+        HashMap<String, String> map = new HashMap<>();
+        for (String arg : args)
+        {
+            String[] split = arg.split("=", 2);
+            String name = split[0].toLowerCase();
+            String value = "";
+            if (split.length > 1)
+            {
+                value = split[1];
+            }
+            if (name.startsWith("-") || name.startsWith("/"))
+            {
+                name = name.substring(1);
+            }
+            map.put(name, value);
+        }
+        return map;
     }
 }
