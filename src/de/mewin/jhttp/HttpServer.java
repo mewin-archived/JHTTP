@@ -17,17 +17,21 @@
 
 package de.mewin.jhttp;
 
+import de.mewin.jhttp.event.EventManager;
+import de.mewin.jhttp.event.RequestDocumentEvent;
 import de.mewin.jhttp.http.HttpHeader;
+import de.mewin.jhttp.http.ProtocolException;
+import de.mewin.jhttp.http.RequestMethod;
 import de.mewin.jhttp.http.StatusCode;
+import de.mewin.jhttp.mod.ModuleManager;
+import de.mewin.jhttp.util.HttpUtil;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -43,7 +47,8 @@ public class HttpServer
     private Thread serverThread;
     private List<HttpConnection> activeConnections;
     private ServerSettingsFile settings, mime;
-    private SimpleDateFormat sdf;
+    private ModuleManager mm;
+    private EventManager em;
     
     private static final boolean DEBUG = true;
     
@@ -76,7 +81,18 @@ public class HttpServer
             getLogger().log(Level.SEVERE, "HTTP root not defined.");
             System.exit(1);
         }
-        this.sdf = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z");
+        this.mm = new ModuleManager(this);
+        File moduleFolder = new File("modules");
+        if (!moduleFolder.exists() && !moduleFolder.mkdir())
+        {
+            getLogger().log(Level.WARNING, "Could not create module folder.");
+        }
+        else
+        {
+            mm.loadModules(moduleFolder);
+        }
+        em = new EventManager();
+        mm.enableModules();
     }
     
     public void start()
@@ -147,49 +163,95 @@ public class HttpServer
         }
     }
     
+    public EventManager getEventManager()
+    {
+        return em;
+    }
+    
     public void handleQuery(HttpConnection con, HttpHeader header, String body) throws IOException
     {
-        HttpHeader answerHeader = new HttpHeader(StatusCode.OK);
+        HttpHeader answerHeader = null;
         String content = "";
-        File file = getFile(header.getUrl());
-        try
+        RequestDocumentEvent ev = new RequestDocumentEvent(header.getUrl(), getFile(header.getUrl()), header, body);
+        em.handleEvent(ev);
+        File file = ev.getFile();
+        InputStream answerStream = null;
+        if (ev.getNewAnswer() == null)
         {
-            if (!file.exists())
+            try
             {
-                answerHeader = new HttpHeader(StatusCode.NOT_FOUND);
+                if (!file.exists())
+                {
+                    answerHeader = HttpUtil.generateDefaultHeader(StatusCode.NOT_FOUND, "not found", "text/html");
+                }
+            }
+            catch(Exception ex)
+            {
+                answerHeader = HttpUtil.generateDefaultHeader(StatusCode.INTERNAL_SERVER_ERROR, "internal server error", "text/html");
+            }
+        
+            if (answerHeader == null)
+            {
+                if (file.exists())
+                {
+                    answerHeader = HttpUtil.generateFileHeader(StatusCode.OK, "", getMimeType(file.getName()), file);
+                    answerHeader.addHeaderValue("Content-Length", String.valueOf(file.length()));
+                }
+                else
+                {
+                    answerHeader = HttpUtil.generateDefaultHeader(StatusCode.NOT_FOUND, "not found", "text/html");
+                }
             }
         }
-        catch(Exception ex)
+        else
         {
-            answerHeader = new HttpHeader(StatusCode.INTERNAL_SERVER_ERROR);
+            answerHeader = ev.getNewAnswer().header;
+            content = ev.getNewAnswer().content;
+            answerStream = ev.getNewAnswer().in;
         }
         
-        if (answerHeader.getStatus() == StatusCode.OK)
+        if (header.getMethod() == RequestMethod.GET
+                || header.getMethod() == RequestMethod.POST)
         {
-            answerHeader.addHeaderValue("Content-Type", getMimeType(header.getUrl()));
+            if (file.exists() && ev.getNewAnswer() == null)
+            {
+                con.sendQuery(answerHeader, new FileInputStream(file));
+            }
+            else if (answerStream == null)
+            {
+                con.sendQuery(answerHeader, content);
+            }
+            else
+            {
+                con.sendQuery(answerHeader, answerStream);
+            }
+        }
+        else if (header.getMethod() == RequestMethod.HEAD)
+        {
+            con.sendQuery(answerHeader, "");
         }
         else
         {
-            answerHeader.addHeaderValue("Content-Type", "text/html");
+            con.sendQuery(HttpUtil.generateDefaultHeader(StatusCode.NOT_IMPLEMENTED, "", "text/html"), "");
         }
-        if (!file.exists())
+    }
+    
+    public void handleClientException(HttpConnection con, Exception ex)
+    {
+        try
         {
-            answerHeader.addHeaderValue("Content-Length", String.valueOf(content.length()));
+            if (ex instanceof ProtocolException || ex instanceof NumberFormatException)
+            {
+                con.sendQuery(HttpUtil.generateDefaultHeader(StatusCode.BAD_REQUEST, "", "text/html"), "");
+            }
+            else
+            {
+                con.sendQuery(HttpUtil.generateDefaultHeader(StatusCode.INTERNAL_SERVER_ERROR, "", "text/html"), "");
+            }
         }
-        else
+        catch(IOException ex2)
         {
-            answerHeader.addHeaderValue("Content-Length", String.valueOf(file.length()));
-        }
-        answerHeader.addHeaderValue("Date", sdf.format(new Date()));
-        answerHeader.addHeaderValue("Last-Modified", sdf.format(file.lastModified()));
-        
-        if (!file.exists())
-        {
-            con.sendQuery(answerHeader, content);
-        }
-        else
-        {
-            con.sendQuery(answerHeader, new FileInputStream(file));
+            ex2.printStackTrace(System.err);
         }
     }
     
