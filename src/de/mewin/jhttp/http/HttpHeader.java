@@ -141,7 +141,7 @@ public class HttpHeader
         {
             throw new ProtocolException("Unexpected end of stream.");
         }
-        this.httpVersion = (byte) (((byte) fNum - '0') * 16 | ((byte) sNum - '0'));
+        this.httpVersion = (byte) (((byte) fNum - '0') * 16 | ((byte) sNum - '0')); //TODO: parse HTTP versions with multiple diggits
         int t = in.read();
         if (t == '\r')
         {
