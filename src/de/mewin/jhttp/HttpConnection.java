@@ -23,7 +23,6 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.Reader;
 import java.net.Socket;
 import java.util.HashMap;
 
@@ -136,7 +135,7 @@ public class HttpConnection
                 for (int i = 0; i < Integer.parseInt(headers.get("Content-Length").trim()); i++)
                 {
                     int r = in.read();
-                    if (r == 0)
+                    if (r < 0)
                     {
                         throw new ProtocolException("Unexpected end of stream.");
                     }
@@ -146,20 +145,15 @@ public class HttpConnection
             
             server.handleQuery(this, header, body);
         }
-        catch(ProtocolException ex)
+        catch(ProtocolException | NumberFormatException ex)
         {
-            close();
-            // TODO: handle protocol errors
+            
+            server.handleClientException(this, ex);
         }
-        catch(NumberFormatException ex2)
+        catch(IOException ex2)
         {
+            server.handleClientException(this, ex2);
             close();
-            // TODO: handle protocol errors
-        }
-        catch(IOException ex3)
-        {
-            close();
-            // TODO: handle protocol errors
         }
         catch(Exception ex4)
         {
