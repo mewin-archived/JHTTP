@@ -185,7 +185,7 @@ public class HttpHeader
             }
             else
             {
-                headers.put(name, tmp);
+                headers.put(name.toLowerCase(), tmp);
             }
         }
     }
