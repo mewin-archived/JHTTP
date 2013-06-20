@@ -42,6 +42,7 @@ import java.util.logging.Logger;
  */
 public class HttpServer
 {
+    private static HttpServer instance;
     private ServerSocket ssocket;
     private int port;
     private Thread serverThread;
@@ -54,6 +55,7 @@ public class HttpServer
     
     public HttpServer(int port)
     {
+        instance = this;
         this.port = port;
         this.activeConnections = new ArrayList<HttpConnection>();
         if (DEBUG)
@@ -234,6 +236,10 @@ public class HttpServer
         {
             con.sendQuery(HttpUtil.generateDefaultHeader(StatusCode.NOT_IMPLEMENTED, "", "text/html"), "");
         }
+        if (!header.getHeaderValues().containsKey("connection") || !header.getHeaderValues().get("connection").equalsIgnoreCase("keep-alive"))
+        {
+            con.close();
+        }
     }
     
     public void handleClientException(HttpConnection con, Exception ex)
@@ -251,11 +257,12 @@ public class HttpServer
         }
         catch(IOException ex2)
         {
-            ex2.printStackTrace(System.err);
+            //ex2.printStackTrace(System.err);
+            con.close();
         }
     }
     
-    private String getMimeType(String url)
+    public String getMimeType(String url)
     {
         if (url.indexOf("?") > -1)
         {
