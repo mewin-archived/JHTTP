@@ -107,9 +107,20 @@ public class HttpConnection
             }
             
             int r;
-            while((r = input.read()) > -1)
+            byte[] buf = new byte[1024];
+            while((r = input.read(buf)) > 0)
             {
-                out.write(r);
+                if (r == buf.length)
+                {
+                    out.write(buf);
+                }
+                else
+                {
+                    for (int i = 0; i < r; i++)
+                    {
+                        out.write(buf[i]);
+                    }
+                }
             }
         }
         catch(IOException ex)
